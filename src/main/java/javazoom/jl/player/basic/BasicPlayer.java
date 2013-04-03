@@ -65,7 +65,7 @@ public class BasicPlayer implements BasicController, Runnable {
     protected AudioInputStream m_audioInputStream;
     protected AudioFileFormat m_audioFileFormat;
     protected SourceDataLine m_line;
-    private Object m_line_lock = new Object(); // mutex lock for m_line
+    private final Object m_line_lock = new Object(); // mutex lock for m_line
     protected FloatControl m_gainControl;
     protected FloatControl m_panControl;
     protected String m_mixerName = null;
@@ -97,7 +97,7 @@ public class BasicPlayer implements BasicController, Runnable {
         reset();
     }
 
-    protected void reset() {
+    protected final void reset() {
         m_status = UNKNOWN;
         if (m_audioInputStream != null) {
             synchronized (m_audioInputStream) {
@@ -205,6 +205,7 @@ public class BasicPlayer implements BasicController, Runnable {
     /**
      * Open file to play.
      */
+    @Override
     public void open(File file) throws BasicPlayerException {
         log.info("open(" + file + ")");
         if (file != null) {
@@ -216,6 +217,7 @@ public class BasicPlayer implements BasicController, Runnable {
     /**
      * Open URL to play.
      */
+    @Override
     public void open(URL url) throws BasicPlayerException {
         log.info("open(" + url + ")");
         if (url != null) {
@@ -227,6 +229,7 @@ public class BasicPlayer implements BasicController, Runnable {
     /**
      * Open inputstream to play.
      */
+    @Override
     public void open(InputStream inputStream) throws BasicPlayerException {
         log.info("open(" + inputStream + ")");
         if (inputStream != null) {
@@ -253,7 +256,7 @@ public class BasicPlayer implements BasicController, Runnable {
             }
             createLine();
             // Notify listeners with AudioFileFormat properties.
-            Map properties = null;
+            Map properties;
             if (m_audioFileFormat instanceof TAudioFileFormat) {
                 // Tritonus SPI compliant audio file format.
                 properties = ((TAudioFileFormat) m_audioFileFormat).properties();
@@ -303,11 +306,7 @@ public class BasicPlayer implements BasicController, Runnable {
             }
             m_status = OPENED;
             notifyEvent(BasicPlayerEvent.OPENED, getEncodedStreamPosition(), -1, null);
-        } catch (LineUnavailableException e) {
-            throw new BasicPlayerException(e);
-        } catch (UnsupportedAudioFileException e) {
-            throw new BasicPlayerException(e);
-        } catch (IOException e) {
+        } catch (LineUnavailableException | UnsupportedAudioFileException | IOException e) {
             throw new BasicPlayerException(e);
         }
     }
@@ -562,6 +561,7 @@ public class BasicPlayer implements BasicController, Runnable {
      * Player Status == PLAYING => Audio stream data sent to Audio line.<br>
      * Player Status == PAUSED => Waiting for another status.
      */
+    @Override
     public void run() {
         log.info("Thread Running");
         int nBytesRead = 1;
@@ -660,7 +660,7 @@ public class BasicPlayer implements BasicController, Runnable {
             log.info("Bytes to skip : " + bytes);
             int previousStatus = m_status;
             m_status = SEEKING;
-            long skipped = 0;
+            long skipped;
             try {
                 synchronized (m_audioInputStream) {
                     notifyEvent(BasicPlayerEvent.SEEKING, getEncodedStreamPosition(), -1, null);
@@ -835,6 +835,7 @@ public class BasicPlayer implements BasicController, Runnable {
     /**
      * @see javazoom.jlgui.basicplayer.BasicController#seek(long)
      */
+    @Override
     public long seek(long bytes) throws BasicPlayerException {
         return skipBytes(bytes);
     }
@@ -842,6 +843,7 @@ public class BasicPlayer implements BasicController, Runnable {
     /**
      * @see javazoom.jlgui.basicplayer.BasicController#play()
      */
+    @Override
     public void play() throws BasicPlayerException {
         startPlayback();
     }
@@ -849,6 +851,7 @@ public class BasicPlayer implements BasicController, Runnable {
     /**
      * @see javazoom.jlgui.basicplayer.BasicController#stop()
      */
+    @Override
     public void stop() throws BasicPlayerException {
         stopPlayback();
     }
@@ -856,6 +859,7 @@ public class BasicPlayer implements BasicController, Runnable {
     /**
      * @see javazoom.jlgui.basicplayer.BasicController#pause()
      */
+    @Override
     public void pause() throws BasicPlayerException {
         pausePlayback();
     }
@@ -863,6 +867,7 @@ public class BasicPlayer implements BasicController, Runnable {
     /**
      * @see javazoom.jlgui.basicplayer.BasicController#resume()
      */
+    @Override
     public void resume() throws BasicPlayerException {
         resumePlayback();
     }
@@ -871,6 +876,7 @@ public class BasicPlayer implements BasicController, Runnable {
      * Sets Pan value. Line should be opened before calling this method. Linear
      * scale : -1.0 <--> +1.0
      */
+    @Override
     public void setPan(double fPan) throws BasicPlayerException {
         if (hasPanControl()) {
             log.debug("Pan : " + fPan);
@@ -885,6 +891,7 @@ public class BasicPlayer implements BasicController, Runnable {
      * Sets Gain value. Line should be opened before calling this method. Linear
      * scale 0.0 <--> 1.0 Threshold Coef. : 1/2 to avoid saturation.
      */
+    @Override
     public void setGain(double fGain) throws BasicPlayerException {
         if (hasGainControl()) {
             double minGainDB = getMinimumGain();
