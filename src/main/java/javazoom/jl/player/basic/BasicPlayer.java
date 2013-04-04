@@ -52,7 +52,7 @@ import org.tritonus.share.sampled.file.TAudioFileFormat;
 
 /**
  * BasicPlayer is a threaded simple player class based on JavaSound API. It has
- * been successfully tested under J2SE 1.3.x, 1.4.x and 1.5.x.
+ * been successfully tested under J2SE from version 1.3.x, to 1.7.x
  */
 public class BasicPlayer implements BasicController, Runnable {
 
